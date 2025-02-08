@@ -67,8 +67,8 @@ h1 {
 
 .search-container {
   position: relative;
-  width: 100%;
-  max-width: 400px;
+  width: 90%;
+  max-width: 600px;
   display: flex;
   align-items: center;
   background: white;
@@ -122,4 +122,71 @@ h1 {
   overflow: hidden;
   padding: 10px;
   padding-left: 25%;
+}
+
+/* new changes */
+
+/* Ensure search results appear below input */
+
+
+.search-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.search-item:hover {
+  background: #555;
+}
+
+/* Final Results Container */
+/* .final-results-container {
+  width: 100%;
+  max-width: 600px;
+  margin-top: 2rem;
+  color: white;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  padding: 10px;
+  padding-left: 25%;
+} */
+
+.search-results-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: #333;
+  /* Dark background */
+  color: white;
+  border-radius: 0 0 8px 8px;
+  max-height: auto;
+  /* Limit height */
+  overflow-y: auto;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  padding: 0;
+  list-style: none;
+}
+
+/* Individual search items */
+.search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.search-item:hover {
+  background: #555;
+}
+
+/* Search icon styling */
+.search-item-icon {
+  width: 18px;
+  height: 18px;
+  color: #bbb;
 }

@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback} from "react";
-import _debounce from 'lodash/debounce';
+import React, { useState, useEffect } from "react";
 import data from "../data.json";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
@@ -31,10 +30,11 @@ const cache = LRUCache(10);
 // Highlight matching search term
 const highlightMatch = (text, query) => {
   if (!query) return text;
+
   const regex = new RegExp(`(${query})`, "gi");
-  return text.split(regex).map((part, i) =>
-    regex.test(part) ? <strong key={i}>{part}</strong> : part
-  );
+  const highlightedText = text.replace(regex, `<strong>$1</strong>`);
+
+  return <span dangerouslySetInnerHTML={{ __html: highlightedText }} />;
 };
 
 const App = () => {
@@ -42,50 +42,23 @@ const App = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [finalResults, setFinalResults] = useState([]); // Stores results when Enter is pressed
 
-  // debounce code
-      function handleDebounceFn(inputValue) {
-          console.log("making api request now", inputValue)
-          if (!inputValue) {
-            setFilteredData([]);
-            return;
-          }
-      
-          if (cache.get(inputValue)) {
-            setFilteredData(cache.get(inputValue));
-          } else {
-            const filtered = data.filter((item) =>
-              item.name.toLowerCase().includes(inputValue.toLowerCase())
-            );
-            cache.set(inputValue, filtered);
-            setFilteredData(filtered);
-          }
-      }
-      const debounceFn = useCallback(_debounce(handleDebounceFn, 300), []);
-
-      function handleChange (event) {
-          setQuery(event.target.value);
-          debounceFn(event.target.value);
-      };
-  
-     
-
   // Live filtering while typing
-  // useEffect(() => {
-  //   if (!query) {
-  //     setFilteredData([]);
-  //     return;
-  //   }
+  useEffect(() => {
+    if (!query) {
+      setFilteredData([]);
+      return;
+    }
 
-  //   if (cache.get(query)) {
-  //     setFilteredData(cache.get(query));
-  //   } else {
-  //     const filtered = data.filter((item) =>
-  //       item.name.toLowerCase().includes(query.toLowerCase())
-  //     );
-  //     cache.set(query, filtered);
-  //     setFilteredData(filtered);
-  //   }
-  // }, [query]);
+    if (cache.get(query)) {
+      setFilteredData(cache.get(query));
+    } else {
+      const filtered = data.filter((item) =>
+        item.name.toLowerCase().includes(query.toLowerCase())
+      );
+      cache.set(query, filtered);
+      setFilteredData(filtered);
+    }
+  }, [query]);
 
   // Handle Enter Key to set final results & clear search
   const handleKeyDown = (e) => {
@@ -107,36 +80,31 @@ const App = () => {
       <div className="container">
         <h1 className="text-heading">SearchPro</h1>
 
-        {/* Search Box with Icons */}
+        {/* Search Box with Live Search Results */}
         <div className="search-container">
           <MagnifyingGlassIcon className="search-icon" />
-          {/* return <input value={value} onChange={handleChange} /> */}
           <input
             type="text"
             placeholder="Type and press Enter..."
             value={query}
-            onChange={handleChange}
-            // onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             className="search-input"
           />
           {query && <XMarkIcon className="clear-icon" onClick={handleClear} />}
-        </div>
 
-        {/* Live Search Results (while typing) */}
-        {query && (
-          <ul className="search-results">
-            {filteredData.length > 0 ? (
-              filteredData.map((item) => (
+          {/* Live Search Results (as dropdown) */}
+          {query && filteredData.length > 0 && (
+            <ul className="search-results-dropdown">
+              {filteredData.map((item) => (
                 <li key={item.id} className="search-item">
+                  <MagnifyingGlassIcon className="search-item-icon" />
                   {highlightMatch(item.name, query)}
                 </li>
-              ))
-            ) : (
-              <li className="search-item no-results">No results found</li>
-            )}
-          </ul>
-        )}
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       {/* Final Search Output (only after Enter is pressed) */}
