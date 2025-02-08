@@ -105,3 +105,21 @@ h1 {
 .clear-icon:hover {
   color: #333;
 }
+
+
+.final-results-container {
+  width: 100%;
+  max-width: 600px;
+  position: fixed;
+  margin-top: 2rem;
+  /* bottom: 0; */
+  left: 50%;
+  transform: translateX(-50%);
+  /* background: white; */
+  color: white;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  padding: 10px;
+  padding-left: 25%;
+}

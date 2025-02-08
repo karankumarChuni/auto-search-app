@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback} from "react";
+import _debounce from 'lodash/debounce';
 import data from "../data.json";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
@@ -39,25 +40,66 @@ const highlightMatch = (text, query) => {
 const App = () => {
   const [query, setQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
+  const [finalResults, setFinalResults] = useState([]); // Stores results when Enter is pressed
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (cache.get(query)) {
-        setFilteredData(cache.get(query));
-      } else {
-        const filtered = data.filter((item) =>
-          item.name.toLowerCase().includes(query.toLowerCase())
-        );
-        cache.set(query, filtered);
-        setFilteredData(filtered);
+  // debounce code
+      function handleDebounceFn(inputValue) {
+          console.log("making api request now", inputValue)
+          if (!inputValue) {
+            setFilteredData([]);
+            return;
+          }
+      
+          if (cache.get(inputValue)) {
+            setFilteredData(cache.get(inputValue));
+          } else {
+            const filtered = data.filter((item) =>
+              item.name.toLowerCase().includes(inputValue.toLowerCase())
+            );
+            cache.set(inputValue, filtered);
+            setFilteredData(filtered);
+          }
       }
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [query]);
+      const debounceFn = useCallback(_debounce(handleDebounceFn, 300), []);
+
+      function handleChange (event) {
+          setQuery(event.target.value);
+          debounceFn(event.target.value);
+      };
+  
+     
+
+  // Live filtering while typing
+  // useEffect(() => {
+  //   if (!query) {
+  //     setFilteredData([]);
+  //     return;
+  //   }
+
+  //   if (cache.get(query)) {
+  //     setFilteredData(cache.get(query));
+  //   } else {
+  //     const filtered = data.filter((item) =>
+  //       item.name.toLowerCase().includes(query.toLowerCase())
+  //     );
+  //     cache.set(query, filtered);
+  //     setFilteredData(filtered);
+  //   }
+  // }, [query]);
+
+  // Handle Enter Key to set final results & clear search
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      setFinalResults(filteredData); // Store the current search results as final output
+      setQuery(""); // Clear search input
+      setFilteredData([]); // Clear live search results
+    }
+  };
 
   const handleClear = () => {
     setQuery("");
     setFilteredData([]);
+    setFinalResults([]); // Clear everything
   };
 
   return (
@@ -68,17 +110,20 @@ const App = () => {
         {/* Search Box with Icons */}
         <div className="search-container">
           <MagnifyingGlassIcon className="search-icon" />
+          {/* return <input value={value} onChange={handleChange} /> */}
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Type and press Enter..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={handleChange}
+            // onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
             className="search-input"
           />
           {query && <XMarkIcon className="clear-icon" onClick={handleClear} />}
         </div>
 
-        {/* Search Results */}
+        {/* Live Search Results (while typing) */}
         {query && (
           <ul className="search-results">
             {filteredData.length > 0 ? (
@@ -93,6 +138,20 @@ const App = () => {
           </ul>
         )}
       </div>
+
+      {/* Final Search Output (only after Enter is pressed) */}
+      {finalResults.length > 0 && (
+        <div className="final-results-container">
+          <h2 className="final-results-heading">Final Search Output:</h2>
+          <ul className="final-results">
+            {finalResults.map((item) => (
+              <li key={item.id} className="final-result-item">
+                {highlightMatch(item.name, query)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
