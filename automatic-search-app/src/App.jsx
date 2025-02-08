@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import data from "../data.json";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
-// LRU Cache Implementation
+// LRU Cache Implementation to store recent search results (max size 10)
 const LRUCache = (maxSize) => {
   const cache = new Map();
   return {
@@ -10,7 +10,7 @@ const LRUCache = (maxSize) => {
       if (cache.has(key)) {
         const value = cache.get(key);
         cache.delete(key);
-        cache.set(key, value);
+        cache.set(key, value); // Move the accessed key to the end (most recently used)
         return value;
       }
       return null;
@@ -18,7 +18,7 @@ const LRUCache = (maxSize) => {
     set: (key, value) => {
       if (cache.size >= maxSize) {
         const firstKey = cache.keys().next().value;
-        cache.delete(firstKey);
+        cache.delete(firstKey); // Remove the least recently used key
       }
       cache.set(key, value);
     },
@@ -27,22 +27,21 @@ const LRUCache = (maxSize) => {
 
 const cache = LRUCache(10);
 
-// Highlight matching search term
+// Function to highlight the matching substring in the search results
 const highlightMatch = (text, query) => {
   if (!query) return text;
-
   const regex = new RegExp(`(${query})`, "gi");
   const highlightedText = text.replace(regex, `<strong>$1</strong>`);
-
   return <span dangerouslySetInnerHTML={{ __html: highlightedText }} />;
 };
 
 const App = () => {
+  // State variables for user input, filtered search results, and final results
   const [query, setQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [finalResults, setFinalResults] = useState([]); // Stores results when Enter is pressed
 
-  // Live filtering while typing
+  // Live filtering while typing (with LRU Cache usage)
   useEffect(() => {
     if (!query) {
       setFilteredData([]);
@@ -50,29 +49,30 @@ const App = () => {
     }
 
     if (cache.get(query)) {
-      setFilteredData(cache.get(query));
+      setFilteredData(cache.get(query)); // Use cached results if available
     } else {
       const filtered = data.filter((item) =>
         item.name.toLowerCase().includes(query.toLowerCase())
       );
-      cache.set(query, filtered);
+      cache.set(query, filtered); // Store new search results in cache
       setFilteredData(filtered);
     }
   }, [query]);
 
-  // Handle Enter Key to set final results & clear search
+  // Handle Enter key press: store results and clear search box
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      setFinalResults(filteredData); // Store the current search results as final output
-      setQuery(""); // Clear search input
+      setFinalResults(filteredData); // Save current search results
+      setQuery(""); // Clear search input field
       setFilteredData([]); // Clear live search results
     }
   };
 
+  // Clear search input and results
   const handleClear = () => {
     setQuery("");
     setFilteredData([]);
-    setFinalResults([]); // Clear everything
+    setFinalResults([]);
   };
 
   return (
