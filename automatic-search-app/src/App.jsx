@@ -36,35 +36,44 @@ const highlightMatch = (text, query) => {
 };
 
 const App = () => {
-  // State variables for user input, filtered search results, and final results
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState(""); // Debounced query
   const [filteredData, setFilteredData] = useState([]);
   const [finalResults, setFinalResults] = useState([]); // Stores results when Enter is pressed
 
+  // Debounce the query input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 300);
+
+    return () => clearTimeout(handler); // Cleanup on re-render
+  }, [query]);
+
   // Live filtering while typing (with LRU Cache usage)
   useEffect(() => {
-    if (!query) {
+    if (!debouncedQuery) {
       setFilteredData([]);
       return;
     }
 
-    if (cache.get(query)) {
-      setFilteredData(cache.get(query)); // Use cached results if available
+    if (cache.get(debouncedQuery)) {
+      setFilteredData(cache.get(debouncedQuery));
     } else {
       const filtered = data.filter((item) =>
-        item.name.toLowerCase().includes(query.toLowerCase())
+        item.name.toLowerCase().includes(debouncedQuery.toLowerCase())
       );
-      cache.set(query, filtered); // Store new search results in cache
+      cache.set(debouncedQuery, filtered);
       setFilteredData(filtered);
     }
-  }, [query]);
+  }, [debouncedQuery]);
 
   // Handle Enter key press: store results and clear search box
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      setFinalResults(filteredData); // Save current search results
-      setQuery(""); // Clear search input field
-      setFilteredData([]); // Clear live search results
+      setFinalResults(filteredData);
+      setQuery("");
+      setFilteredData([]);
     }
   };
 
